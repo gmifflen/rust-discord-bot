@@ -1,20 +1,18 @@
 use rand::Rng;
 use serenity::{
-    all::RoleId,
+    all::Member,
     async_trait,
     framework::standard::{
         macros::{command, group},
         CommandResult, Configuration, StandardFramework,
     },
     http::Http,
-    model::{
-        channel::Message,
-        gateway::{GatewayIntents, Ready},
-    },
+    model::{channel::Message, gateway::Ready, id::GuildId, id::RoleId, id::UserId},
     prelude::*,
 };
 use sqlx::mysql::MySqlPool;
 use std::env;
+use std::ops::Deref;
 
 struct Handler;
 
@@ -75,6 +73,74 @@ impl Handler {
     }
 }
 
+async fn send_level_up_message(http: &Http, msg: &Message, new_level: u32) {
+    if let Err(why) = msg
+        .reply(
+            http,
+            &format!("Congratulations! You've reached level {}!", new_level),
+        )
+        .await
+    {
+        println!("Error sending message: {:?}", why);
+    }
+}
+
+async fn update_user_roles(
+    http: &Http,
+    guild_id: GuildId,
+    data: &TypeMap,
+    user_id: UserId,
+    new_level: u32,
+) {
+    let member = match guild_id.member(http, user_id).await {
+        Ok(member) => member,
+        Err(_) => return,
+    };
+
+    if let Some(roles) = data.get::<RoleIds>() {
+        remove_existing_roles(http, &member, roles).await;
+        assign_new_role(http, &member, roles, new_level).await;
+    } else {
+        println!("Error: RoleIds not found in context data.");
+    }
+}
+
+async fn remove_existing_roles(http: &Http, member: &Member, roles: &RoleIds) {
+    let all_role_ids = vec![
+        RoleId::from(roles.beginner),
+        RoleId::from(roles.rookie),
+        RoleId::from(roles.intermediate),
+        RoleId::from(roles.advanced),
+        RoleId::from(roles.expert),
+        RoleId::from(roles.master),
+        RoleId::from(roles.elite),
+    ];
+
+    for role_id in all_role_ids {
+        if member.roles.contains(&role_id) {
+            if let Err(why) = member.remove_role(http, role_id).await {
+                println!("Error removing role: {:?}", why);
+            }
+        }
+    }
+}
+
+async fn assign_new_role(http: &Http, member: &Member, roles: &RoleIds, new_level: u32) {
+    let new_role_id = match new_level {
+        1..=5 => RoleId::from(roles.beginner),
+        6..=10 => RoleId::from(roles.rookie),
+        11..=20 => RoleId::from(roles.intermediate),
+        21..=30 => RoleId::from(roles.advanced),
+        31..=40 => RoleId::from(roles.expert),
+        41..=50 => RoleId::from(roles.master),
+        _ => RoleId::from(roles.elite),
+    };
+
+    if let Err(why) = member.add_role(http, new_role_id).await {
+        println!("Error assigning role: {:?}", why);
+    }
+}
+
 #[async_trait]
 impl EventHandler for Handler {
     async fn message(&self, ctx: Context, msg: Message) {
@@ -82,79 +148,33 @@ impl EventHandler for Handler {
             return;
         }
 
-        let data_read = ctx.data.read().await;
-        let pool = &data_read.get::<MySqlPoolContainer>().unwrap().pool.clone();
         let user_id = u64::from(msg.author.id);
         let xp_gain = rand::thread_rng().gen_range(1..=10);
-        let (current_xp, current_level) = Handler::get_user_xp(user_id, &pool).await;
-        let new_level = Handler::calculate_level(current_xp + xp_gain);
 
-        Handler::update_user_xp_and_level(user_id, xp_gain, new_level, &pool).await;
+        if let Some(pool_container) = ctx.data.read().await.get::<MySqlPoolContainer>() {
+            let pool = &pool_container.pool;
+            let (current_xp, current_level) = Handler::get_user_xp(user_id, pool).await;
+            let new_level = Handler::calculate_level(current_xp + xp_gain);
+            Handler::update_user_xp_and_level(user_id, xp_gain, new_level, pool).await;
 
-        if new_level > current_level {
-            if let Err(why) = msg
-                .reply(
-                    &ctx.http,
-                    &format!("Congratulations! You've reached level {}!", new_level),
-                )
-                .await
-            {
-                println!("Error sending message: {:?}", why);
-            }
-
-            // Role assignment logic
-            let guild_id = match msg.guild_id {
-                Some(guild_id) => guild_id,
-                None => return,
-            };
-
-            let member = match guild_id.member(&ctx.http, msg.author.id).await {
-                Ok(member) => member,
-                Err(_) => return,
-            };
-
-            let data_read = ctx.data.read().await;
-            let roles = data_read.get::<RoleIds>().unwrap();
-
-            let all_role_ids = vec![
-                RoleId::from(roles.beginner),
-                RoleId::from(roles.rookie),
-                RoleId::from(roles.intermediate),
-                RoleId::from(roles.advanced),
-                RoleId::from(roles.expert),
-                RoleId::from(roles.master),
-                RoleId::from(roles.elite),
-            ];
-
-            // Remove existing level roles
-            for role_id in &all_role_ids {
-                if member.roles.contains(role_id) {
-                    if let Err(why) = member.remove_role(&ctx.http, *role_id).await {
-                        println!("Error removing role: {:?}", why);
-                    }
+            if new_level > current_level {
+                send_level_up_message(&ctx.http, &msg, new_level).await;
+                if let Some(guild_id) = msg.guild_id {
+                    let data = ctx.data.read().await;
+                    update_user_roles(&ctx.http, guild_id, data.deref(), msg.author.id, new_level)
+                        .await;
                 }
             }
-
-            // Assign new role
-            let new_role_id = match new_level {
-                1..=5 => RoleId::from(roles.beginner),
-                6..=10 => RoleId::from(roles.rookie),
-                11..=20 => RoleId::from(roles.intermediate),
-                21..=30 => RoleId::from(roles.advanced),
-                31..=40 => RoleId::from(roles.expert),
-                41..=50 => RoleId::from(roles.master),
-                _ => RoleId::from(roles.elite),
-            };
-
-            if let Err(why) = member.add_role(&ctx.http, new_role_id).await {
-                println!("Error assigning role: {:?}", why);
-            }
+        } else {
+            println!("Error: MySqlPoolContainer not found in context data.");
         }
     }
 
     async fn ready(&self, _: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
     }
+
+    // Include other event handler methods if necessary
 }
 
 struct MySqlPoolContainer {
@@ -186,6 +206,36 @@ struct General;
 #[command]
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     msg.channel_id.say(&ctx.http, "I'm still alive!").await?;
+    Ok(())
+}
+
+#[command]
+async fn top(ctx: &Context, msg: &Message) -> CommandResult {
+    let data_read = ctx.data.read().await;
+    let pool = data_read.get::<MySqlPoolContainer>().unwrap().pool.clone();
+
+    let top_users = Handler::get_top_users(&pool).await;
+    let mut response = String::new();
+
+    for (index, (user_id, level)) in top_users.into_iter().enumerate() {
+        let user_name = match ctx.http.get_user(user_id.into()).await {
+            Ok(user) => user.name,
+            Err(_) => format!("Unknown User ({})", user_id),
+        };
+        response.push_str(&format!(
+            "{}. {} - Level: {}\n",
+            index + 1,
+            user_name,
+            level
+        ));
+    }
+
+    if !response.is_empty() {
+        msg.channel_id.say(&ctx.http, &response).await?;
+    } else {
+        msg.channel_id.say(&ctx.http, "No users found.").await?;
+    }
+
     Ok(())
 }
 
@@ -278,32 +328,4 @@ async fn main() {
     }
 }
 
-#[command]
-async fn top(ctx: &Context, msg: &Message) -> CommandResult {
-    let data_read = ctx.data.read().await;
-    let pool = data_read.get::<MySqlPoolContainer>().unwrap().pool.clone();
-
-    let top_users = Handler::get_top_users(&pool).await;
-    let mut response = String::new();
-
-    for (index, (user_id, level)) in top_users.into_iter().enumerate() {
-        let user_name = match ctx.http.get_user(user_id.into()).await {
-            Ok(user) => user.name,
-            Err(_) => format!("Unknown User ({})", user_id),
-        };
-        response.push_str(&format!(
-            "{}. {} - Level: {}\n",
-            index + 1,
-            user_name,
-            level
-        ));
-    }
-
-    if !response.is_empty() {
-        msg.channel_id.say(&ctx.http, &response).await?;
-    } else {
-        msg.channel_id.say(&ctx.http, "No users found.").await?;
-    }
-
-    Ok(())
-}
+// You can add other commands and implementations as needed
