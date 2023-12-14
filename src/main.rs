@@ -18,7 +18,6 @@ struct Handler;
 
 impl Handler {
     async fn get_user_xp(user_id: u64, pool: &MySqlPool) -> (u32, u32) {
-        // Returns (XP, Level)
         let result =
             sqlx::query_as::<_, (u32, u32)>("SELECT xp, level FROM user_xp WHERE user_id = ?")
                 .bind(user_id)
@@ -60,7 +59,7 @@ impl Handler {
         while Self::calculate_xp_for_level(level) <= xp {
             level += 1;
         }
-        level - 1 // Subtract 1 because level will be one higher than the level for the given XP
+        level - 1 
     }
 
     async fn get_top_users(pool: &MySqlPool) -> Vec<(u64, u32)> {
@@ -173,8 +172,6 @@ impl EventHandler for Handler {
     async fn ready(&self, _: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
     }
-
-    // Include other event handler methods if necessary
 }
 
 struct MySqlPoolContainer {
@@ -327,5 +324,3 @@ async fn main() {
         println!("Client error: {:?}", why);
     }
 }
-
-// You can add other commands and implementations as needed
