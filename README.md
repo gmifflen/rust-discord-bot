@@ -8,7 +8,7 @@ This project is a Discord bot written in Rust, using the Serenity framework. It'
 
 - **XP Tracking**: Automatically tracks and updates user XP when they send messages.
 - **Role Management**: Assigns roles to users based on their XP level.
-- **Commands**: Responds to specific commands such as `!ping` and `!top`.
+- **Commands**: Responds to specific commands such as `!ping`,`!top`, `!help` and more.
 
 ## Installation
 
@@ -16,7 +16,7 @@ This project is a Discord bot written in Rust, using the Serenity framework. It'
 
 - Rust Programming Language: [Install Rust](https://www.rust-lang.org/tools/install)
 - SQLx CLI: Used for handling database migrations.
-- MySQL Database: The bot uses a MySQL database to store user data.
+- MySQL Database: The bot uses a MySQL/MariaDB to store user data.
 
 ### Setup
 
@@ -26,8 +26,12 @@ This project is a Discord bot written in Rust, using the Serenity framework. It'
    git clone https://github.com/gmifflen/rust-discord-bot.git
    cd rust-discord-bot
    ```
+2. **Install Crates**
+   ```bash
+   cargo add serenity tokio rand sqlx dotenv regex chrono tracing tracing-subscriber
+   ```
 
-2. **Environment Variables**
+3. **Environment Variables**
    Create a `.env` file in the root directory with the following content:
 
    ```
@@ -42,7 +46,7 @@ This project is a Discord bot written in Rust, using the Serenity framework. It'
    XYZ_ROLE_ID=123456789
    ```
 
-3. **Database Setup**
+4. **Database Setup**
    Ensure your MySQL database is running and use SQLx CLI to set up the database schema.
 
    ```SQL
@@ -58,7 +62,7 @@ This project is a Discord bot written in Rust, using the Serenity framework. It'
     cargo sqlx prepare
    ```
 
-4. **Build the Project**
+5. **Build the Project**
    ```bash
    cargo build
    ```
@@ -70,6 +74,10 @@ To run the bot:
 ```bash
 cargo run
 ```
+or
+```bash
+cargo run --release
+```
 
 The bot will start on any server it has been added to Discord server. It will begin listening for messages and commands.
 
@@ -80,4 +88,4 @@ Any suggestions on improvements or ways to write it in a better/safer way is muc
 
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+[MIT](https://github.com/gmifflen/rust-discord-bot/blob/main/LICENSE)
