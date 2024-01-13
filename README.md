@@ -81,6 +81,9 @@ cargo run --release
 
 The bot will start on any server it has been added to Discord server. It will begin listening for messages and commands.
 
+## TODO
+- [ ] Add function that pings a role if a game is updated on IOS or Andriod
+
 ## Contributing
 
 I'm not the best at Rust, this is my third public Rust project.
