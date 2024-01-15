@@ -91,4 +91,4 @@ Any suggestions on improvements or ways to write it in a better/safer way is muc
 
 ## License
 
-[MIT](https://github.com/gmifflen/rust-discord-bot/blob/main/LICENSE)
+[GPL-2.0](https://github.com/gmifflen/rust-discord-bot/blob/main/LICENSE)
