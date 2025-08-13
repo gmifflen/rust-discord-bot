@@ -111,21 +111,23 @@ cargo run --release
 
 ## TODO
 - [x] Move from [Serenity](https://github.com/serenity-rs/serenity/) to [Poise](https://github.com/serenity-rs/poise/)
+- [ ] Switch to slash commands
 - [ ] Break `main.rs` down into multiple modules,
-   - At the very least move commands into their own directory
-- [ ] Move to slash commands
+    - At the very least move commands into their own directory
 - [ ] Change `mystats` to a general `stats` to view other's stats too
-- [ ] Allow user to cancel `remindme` reminders
-- [ ] Implement role-based commands
 - [ ] Implement ephemeral replies for certain commands
-- [ ] Cache for usernames in `top`
+- [ ] Allow user to cancel `remindme` reminders
+    - Will likely have to give IDs on creation, paired with ephemeral messages
+- [ ] Cache for usernames in `top` with API calls being the fallback
+- [ ] Implement role-gated commands
 - [ ] Add SQLite support to minimize user installation requirements
-   - Will be added alongside MySQL/MariaDB using Cargo features, rather than replacing them, to maintain compatibility
+    - Will be added alongside MySQL/MariaDB using Cargo features, rather than replacing them, to maintain compatibility
+    - Will become the default backend
 - [ ] Add unit tests
 - [ ] Add PostgreSQL support; possibly replace MySQL/MariaDB altogether
 - [ ] Improving `remindme` parsing
-   - etc. `tomorrow 9am`, `next wed 14:30`, `in 90m`
-   - look into NLP?
+    - etc. `tomorrow 9am`, `next wed 14:30`, `in 90m`
+    - look into NLP?
 
 ## Development
 
