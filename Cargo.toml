@@ -2,13 +2,16 @@
 name = "rust-discord-bot"
 version = "0.5.2"
 edition = "2024"
+rust-version = "1.89"
 license = "GPL-3.0-only"
 repository = "https://github.com/gmifflen/rust-discord-bot"
 
 [profile.release]
 opt-level = 3
-codegen-units = 1
+codegen-units = 1 # causes slower compile times, change to 16 to return to default
 lto = true
+strip = true
+panic = "abort"
 
 [profile.dev]
 opt-level = 0
