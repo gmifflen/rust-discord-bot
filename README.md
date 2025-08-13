@@ -114,6 +114,7 @@ cargo run --release
 - [ ] Switch to slash commands
 - [ ] Break `main.rs` down into multiple modules,
     - At the very least move commands into their own directory
+- [ ] Think of a better name than "rust-discord-bot"
 - [ ] Change `mystats` to a general `stats` to view other's stats too
 - [ ] Implement ephemeral replies for certain commands
 - [ ] Allow user to cancel `remindme` reminders
