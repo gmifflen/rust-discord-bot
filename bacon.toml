@@ -1,0 +1,26 @@
+# Complete help on configuration: https://dystroy.org/bacon/config/
+default_job = "check"
+env.CARGO_TERM_COLOR = "always"
+
+[jobs.check]
+command = ["cargo", "check"]
+need_stdout = false
+
+[jobs.clippy]
+command = ["cargo", "clippy"]
+need_stdout = false
+
+[jobs.clippy-plus]
+command = [
+    "cargo", "clippy",
+    "--",
+    "-W", "clippy::pedantic",
+    "-W", "clippy::nursery",
+    "-W", "clippy::unwrap_used",
+    "-W", "clippy::expect_used",
+]
+need_stdout = false
+
+[jobs.test]
+command = ["cargo", "test"]
+need_stdout = true
