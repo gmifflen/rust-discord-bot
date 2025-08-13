@@ -1,22 +1,26 @@
 [package]
 name = "rust-discord-bot"
-version = "0.1.0"
-edition = "2021"
+version = "0.5.2"
+edition = "2024"
+license = "GPL-2.0-only"
+repository = "https://github.com/gmifflen/rust-discord-bot"
 
 [profile.release]
 opt-level = 3
+codegen-units = 1
 lto = true
 
 [profile.dev]
 opt-level = 0
 
 [dependencies]
-serenity = { version = "0.12.0", features = ["full"] }
-tokio = { version = "1", features = ["full"] }
-rand = "0.8.4"
-sqlx = { version = "0.7", features = ["mysql", "runtime-tokio", "tls-rustls"] }
-dotenv = "0.15.0"
-regex = "1.10.2"
-chrono = "0.4.31"
-tracing = "0.1.40"
-tracing-subscriber = "0.3.18"
+poise = "0.6.1"
+serenity = { version = "0.12.4", features = ["full"] }
+tokio = { version = "1.47.1", features = ["full"] }
+rand = "0.9.2"
+sqlx = { version = "0.8.6", features = ["mysql", "runtime-tokio", "tls-rustls"] }
+dotenvy = "0.15.7"
+regex = "1.11.1"
+chrono = "0.4.41"
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
