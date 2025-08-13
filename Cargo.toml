@@ -2,7 +2,7 @@
 name = "rust-discord-bot"
 version = "0.5.2"
 edition = "2024"
-license = "GPL-2.0-only"
+license = "GPL-3.0-only"
 repository = "https://github.com/gmifflen/rust-discord-bot"
 
 [profile.release]
