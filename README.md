@@ -22,8 +22,7 @@ Command prefix is `!` but can also be @'ed instead
 ## Requirements
 
 - Rust stable: <https://www.rust-lang.org/tools/install>
-- MySQL or MariaDB
-- (Optional) SQLx CLI if you use migrations
+- MySQL or MariaDB: <https://dev.mysql.com/downloads/> or <https://mariadb.com/downloads/community/>
 
 ## Discord setup
 
